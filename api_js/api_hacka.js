@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const port = 3000; //porta padrão
 const sql = require('mssql');
-const connStr = "Server=hackathontime32.cyrrf5jy4b4x.us-east-2.rds.amazonaws.com;Database=portabilidade;User Id=technee;Password=technee#32;";
+const connStr = "Server=hackathontime32.cyrrf5jy4b4x.us-east-2.rds.amazonaws.com;Database=portabilidade;User Id=technee;Password=;";
 
 //fazendo a conexão global
 sql.connect(connStr)
