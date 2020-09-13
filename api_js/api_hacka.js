@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const port = 3000; //porta padrão
 const sql = require('mssql');
-const connStr = "Server=hackathontime32.cyrrf5jy4b4x.us-east-2.rds.amazonaws.com;Database=portabilidade;User Id=technee;Password=;";
+const connStr = "Server=hackathontime32.cyrrf5jy4b4x.us-east-2.rds.amazonaws.com;Database=portabilidade;User Id=technee;Password=technee#32;";
 
 //fazendo a conexão global
 sql.connect(connStr)
@@ -29,6 +29,12 @@ function execSQLQuery(sqlQry, res){
                .then(result => res.json(result.recordset))
                .catch(err => res.json(err));
 }
+
+function validBody(v_body){
+    if(!v_body) return '';
+    return v_body;
+}
+
 /*Teste */
 router.get('/teste', (req, res) =>{
     execSQLQuery('SELECT * FROM TesteConexao', res);
@@ -45,15 +51,32 @@ router.delete('/teste/:id', (req, res) =>{
 })
 
 router.post('/teste', (req, res) =>{
-    const teste_valor = parseInt(req.body.teste_valor);
-    const teste_chave = parseInt(req.body.teste_chave);
-    execSQLQuery(`INSERT INTO TesteConexao(teste_valor, teste_chave) VALUES(${teste_valor},'${teste_chave}')`, res);
+    const teste_valor = parseInt(validBody(req.body.teste_valor));
+    const teste_chave = parseInt(validBody(req.body.teste_chave));
+    const teste_chave2 = parseInt(validBody(req.body.teste_chave2));
+    execSQLQuery(`INSERT INTO TesteConexao(teste_valor, teste_chave, teste_chave2) VALUES(${teste_valor},'${teste_chave}',${teste_chave2})`, res);
 })
 
 router.patch('/teste/:id', (req, res) =>{
     const id = parseInt(req.params.id);
-    const teste_valor = parseInt(req.body.teste_valor);
-    execSQLQuery(`UPDATE TesteConexao SET teste_valor=${teste_valor} WHERE teste_chave=${id}`, res);
+    const v_body = {
+        teste_valor : req.body.teste_valor,
+        teste_chave2 : req.body.teste_chave2
+    };
+    
+    var filtro = ` WHERE teste_chave=${id}`;
+    var sets = null;
+
+    for(key in v_body){
+        if(typeof v_body[key] !== 'undefined'){
+            console.log(typeof v_body[key]);
+            if(!sets) sets = key+`=${v_body[key]}`;
+            else sets += `,`+key+`=${v_body[key]}`;
+        }
+    }
+    var query = `UPDATE TesteConexao SET `+sets+filtro;
+    console.log(query);
+    execSQLQuery(query, res);
 })
 
 
@@ -74,20 +97,33 @@ router.delete('/usuario/:id', (req, res) =>{
 })
 
 router.post('/usuario', (req, res) =>{
-    const agencia = req.body.agencia;
-    const conta = req.body.conta;
-    const senha = req.body.senha;
-    const email = req.body.email;
+    const agencia = validBody(req.body.agencia);
+    const conta = validBody(req.body.conta);
+    const senha = validBody(req.body.senha);
+    const email = validBody(req.body.email);
     execSQLQuery(`INSERT INTO Usuario(agencia, conta, senha, email) VALUES('${agencia}','${conta}','${senha}','${email}')`, res);
 })
 
 router.patch('/usuario/:id', (req, res) =>{
     const id = parseInt(req.params.id);
-    const agencia = req.body.agencia;
-    const conta = req.body.conta;
-    const senha = req.body.senha;
-    const email = req.body.email;
-    execSQLQuery(`UPDATE Usuario SET agencia='${agencia}',conta='${conta}',senha='${senha}',email='${email}' WHERE id=${id}`, res);
+    const v_body ={
+        agencia : req.body.agencia,
+        conta : req.body.conta,
+        senha : req.body.senha,
+        email : req.body.email
+    }
+    var filtro = ` WHERE id=${id}`;
+    var sets = null;
+
+    for(key in v_body){
+        if(typeof v_body[key] !== 'undefined'){
+            console.log(typeof v_body[key]);
+            if(!sets) sets = key+`=${v_body[key]}`;
+            else sets += `,`+key+`=${v_body[key]}`;
+        }
+    }
+    var query = `UPDATE Usuario SET `+sets+filtro;
+    execSQLQuery(query, res);
 })
 
 
@@ -111,14 +147,29 @@ router.delete('/repjson/:id', (req, res) =>{
 
 router.post('/repjson', (req, res) =>{
     const token = req.body.token;
-    const json_file = req.body.json_file;
+    const json_file = validBody(req.body.json_file);
     execSQLQuery(`INSERT INTO REPOSITORIO_JSON(token, json_file) VALUES('${token}','${json_file}')`, res);
 })
 
 router.patch('/repjson/:id', (req, res) =>{
     const token = req.params.id;
-    const json_file = req.body.json_file;
-    execSQLQuery(`UPDATE REPOSITORIO_JSON SET json_file='${json_file}' WHERE token='${token}'`, res);
+    const v_body = {
+        json_file : req.body.json_file
+    };
+
+    var filtro = ` WHERE token=${token}`;
+    var sets = null;
+
+    for(key in v_body){
+        if(typeof v_body[key] !== 'undefined'){
+            console.log(typeof v_body[key]);
+            if(!sets) sets = key+`=${v_body[key]}`;
+            else sets += `,`+key+`=${v_body[key]}`;
+        }
+    }
+    var query = `UPDATE TesteConexao SET `+sets+filtro;
+
+    execSQLQuery(query, res);
 })
 
 
@@ -142,14 +193,15 @@ router.delete('/portfact/:id', (req, res) =>{
 
 router.post('/portfact', (req, res) =>{
     const id = parseInt(req.body.id);
-    const nome_cliente = req.body.nome_cliente;
-    const telefone = req.body.telefone;
-    const banco_origem = req.body.banco_origem;
-    const banco_destino = req.body.banco_destino;
-    const token = req.body.token;
-    const motivo_transferencia_combo = req.body.motivo_transferencia_combo;
-    const motivo_transferencia_text = req.body.motivo_transferencia_text;
-    execSQLQuery(`INSERT INTO PORTABILIDADE_FACT(id, nome_cliente, telefone, banco_origem, banco_destino, token, motivo_transferencia_combo, motivo_transferencia_text) VALUES(${id},'${nome_cliente}', '${telefone}', '${banco_origem}', '${banco_destino}', '${token}', '${motivo_transferencia_combo}', '${motivo_transferencia_text}')`, res);
+    const nome_cliente = validBody(req.body.nome_cliente);
+    const telefone = validBody(req.body.telefone);
+    const banco_origem = validBody(req.body.banco_origem);
+    const banco_destino = validBody(req.body.banco_destino);
+    const token = validBody(req.body.token);
+    const motivo_transferencia_combo = validBody(req.body.motivo_transferencia_combo);
+    const motivo_transferencia_text = validBody(req.body.motivo_transferencia_text);
+    var query = `INSERT INTO PORTABILIDADE_FACT(id, nome_cliente, telefone, banco_origem, banco_destino, token, motivo_transferencia_combo, motivo_transferencia_text) VALUES(${id},'${nome_cliente}', '${telefone}', '${banco_origem}', '${banco_destino}', '${token}', '${motivo_transferencia_combo}', '${motivo_transferencia_text}')`;
+    execSQLQuery(query, res);
 })
 
 router.patch('/portfact/:id', (req, res) =>{
@@ -161,5 +213,29 @@ router.patch('/portfact/:id', (req, res) =>{
     const token = req.body.token;
     const motivo_transferencia_combo = req.body.motivo_transferencia_combo;
     const motivo_transferencia_text = req.body.motivo_transferencia_text;
-    execSQLQuery(`UPDATE PORTABILIDADE_FACT SET nome_cliente='${nome_cliente}', telefone='${telefone}', banco_origem='${banco_origem}', banco_destino='${banco_destino}', token='${token}', motivo_transferencia_combo='${motivo_transferencia_combo}', motivo_transferencia_text='${motivo_transferencia_text}' WHERE id='${id}'`, res);
+
+    const v_body = {
+        nome_cliente : req.body.nome_cliente,
+        telefone : req.body.telefone,
+        banco_origem : req.body.banco_origem,
+        banco_destino : req.body.banco_destino,
+        token : req.body.token,
+        motivo_transferencia_combo : req.body.motivo_transferencia_combo,
+        motivo_transferencia_text : req.body.motivo_transferencia_text
+    };
+
+    var filtro = ` WHERE id=${id}`;
+    var sets = null;
+
+    for(key in v_body){
+        if(typeof v_body[key] !== 'undefined'){
+            console.log(typeof v_body[key]);
+            if(!sets) sets = key+`=${v_body[key]}`;
+            else sets += `,`+key+`=${v_body[key]}`;
+        }
+    }
+    var query = `UPDATE PORTABILIDADE_FACT SET `+sets+filtro;
+
+
+    execSQLQuery(query, res);
 })
